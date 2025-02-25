@@ -26,9 +26,9 @@ public static class Parser
             int result = ParseExpression(expression);
             return result.ToString();
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            return "ERROR";
+            return "ERROR" + e.Message;
         }
     }
 
@@ -42,7 +42,7 @@ public static class Parser
         return result;
     }
 
-    // ParseExpression: Expression = Term { ('+' | '-') Term }
+    // '+' | '-'
     private static int ParseExpression(string s, ref int pos)
     {
         int result = ParseTerm(s, ref pos);
@@ -58,7 +58,7 @@ public static class Parser
         return result;
     }
 
-    // ParseTerm: Term = Factor { ('*' | '/') Factor }
+    // '*' | '/'
     private static int ParseTerm(string s, ref int pos)
     {
         int result = ParseFactor(s, ref pos);
@@ -81,7 +81,7 @@ public static class Parser
         return result;
     }
 
-    // ParseFactor: Factor = Number | '(' Expression ')'
+    // Number | '(' Expression ')'
     private static int ParseFactor(string s, ref int pos)
     {
         SkipWhitespace(s, ref pos);
@@ -114,10 +114,8 @@ public static class Parser
         }
     }
 
-    // Helper method to skip whitespace in the expression.
     private static void SkipWhitespace(string s, ref int pos)
     {
-        while (pos < s.Length && char.IsWhiteSpace(s[pos]))
-            pos++;
+        while (pos < s.Length && char.IsWhiteSpace(s[pos])) pos++;
     }
 }
