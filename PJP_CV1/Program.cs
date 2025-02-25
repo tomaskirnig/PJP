@@ -1,121 +1,100 @@
 ﻿using System;
+using System.Collections.Generic;
 
-public class Program
+enum TokenType { Number, Plus, Minus, Mul, Div, LParen, RParen, End }
+
+class Token
 {
-    public static void Main()
-    {
-        Console.WriteLine("Enter number of expressions: ");
-        if (!int.TryParse(Console.ReadLine(), out int n))
-            return;
+    public TokenType Type;
+    public int Value;
+    public Token(TokenType type, int value = 0) { Type = type; Value = value; }
+}
 
-        for (int i = 0; i < n; i++)
-        {
-            Console.WriteLine($"Enter expression ({i+1}.): ");
-            string expr = Console.ReadLine();
-            Console.WriteLine(Parser.Evaluate(expr));
-        }
+class Parser
+{
+    List<Token> tokens;
+    int pos;
+    public Parser(List<Token> tokens) { this.tokens = tokens; pos = 0; }
+    public Token Curr => tokens[pos];
+    void Eat(TokenType t) { if (Curr.Type == t) pos++; else throw new Exception(); }
+
+    public int ParseExpr()
+    {
+        int x = ParseTerm();
+        while (Curr.Type == TokenType.Plus || Curr.Type == TokenType.Minus)
+            x = Curr.Type == TokenType.Plus ? x + (EatAndParse(TokenType.Plus)) : x - (EatAndParse(TokenType.Minus));
+        return x;
+    }
+    int EatAndParse(TokenType t) { Eat(t); return ParseTerm(); }
+
+    int ParseTerm()
+    {
+        int x = ParseFactor();
+        while (Curr.Type == TokenType.Mul || Curr.Type == TokenType.Div)
+            x = Curr.Type == TokenType.Mul ? x * (EatAndParse(TokenType.Mul)) : x / (EatAndParse(TokenType.Div));
+        return x;
+    }
+
+    int ParseFactor()
+    {
+        if (Curr.Type == TokenType.Number) { int v = Curr.Value; Eat(TokenType.Number); return v; }
+        if (Curr.Type == TokenType.LParen) { Eat(TokenType.LParen); int v = ParseExpr(); Eat(TokenType.RParen); return v; }
+        throw new Exception();
     }
 }
 
-public static class Parser
+class Program
 {
-    public static string Evaluate(string expression)
+    static List<Token> Tokenize(string s)
     {
-        try
+        var tokens = new List<Token>();
+        for (int i = 0; i < s.Length; i++)
         {
-            int result = ParseExpression(expression);
-            return result.ToString();
-        }
-        catch (Exception e)
-        {
-            return "ERROR" + e.Message;
-        }
-    }
-
-    private static int ParseExpression(string s)
-    {
-        int pos = 0;
-        int result = ParseExpression(s, ref pos);
-        SkipWhitespace(s, ref pos);
-        if (pos < s.Length)
-            throw new Exception("Unexpected characters");
-        return result;
-    }
-
-    // '+' | '-'
-    private static int ParseExpression(string s, ref int pos)
-    {
-        int result = ParseTerm(s, ref pos);
-        SkipWhitespace(s, ref pos);
-        while (pos < s.Length && (s[pos] == '+' || s[pos] == '-'))
-        {
-            char op = s[pos];
-            pos++; // consume operator
-            int term = ParseTerm(s, ref pos);
-            result = op == '+' ? result + term : result - term;
-            SkipWhitespace(s, ref pos);
-        }
-        return result;
-    }
-
-    // '*' | '/'
-    private static int ParseTerm(string s, ref int pos)
-    {
-        int result = ParseFactor(s, ref pos);
-        SkipWhitespace(s, ref pos);
-        while (pos < s.Length && (s[pos] == '*' || s[pos] == '/'))
-        {
-            char op = s[pos];
-            pos++; // consume operator
-            int factor = ParseFactor(s, ref pos);
-            if (op == '*')
-                result *= factor;
+            char c = s[i];
+            if (char.IsWhiteSpace(c)) continue;
+            if (char.IsDigit(c))
+            {
+                int v = 0;
+                while (i < s.Length && char.IsDigit(s[i]))
+                    v = v * 10 + (s[i++] - '0');
+                tokens.Add(new Token(TokenType.Number, v));
+                i--;
+            }
             else
             {
-                if (factor == 0)
-                    throw new Exception("Division by zero");
-                result /= factor;
+                tokens.Add(c switch
+                {
+                    '+' => new Token(TokenType.Plus),
+                    '-' => new Token(TokenType.Minus),
+                    '*' => new Token(TokenType.Mul),
+                    '/' => new Token(TokenType.Div),
+                    '(' => new Token(TokenType.LParen),
+                    ')' => new Token(TokenType.RParen),
+                    _ => throw new Exception()
+                });
             }
-            SkipWhitespace(s, ref pos);
         }
-        return result;
+        tokens.Add(new Token(TokenType.End));
+        return tokens;
     }
-
-    // Number | '(' Expression ')'
-    private static int ParseFactor(string s, ref int pos)
+    static void Main()
     {
-        SkipWhitespace(s, ref pos);
-        if (pos >= s.Length)
-            throw new Exception("Unexpected end of input");
+        Console.WriteLine("Enter number of lines: ");
+        int T = int.Parse(Console.ReadLine());
 
-        if (s[pos] == '(')
+        for (int i = 0; i < T; i++)
         {
-            pos++; // consume '('
-            int result = ParseExpression(s, ref pos);
-            SkipWhitespace(s, ref pos);
-            if (pos >= s.Length || s[pos] != ')')
-                throw new Exception("Missing closing parenthesis");
-            pos++; // consume ')'
-            return result;
+            Console.WriteLine($"Enter expression ({i+1}.): ");
+            string line = Console.ReadLine();
+            try
+            {
+                var tokens = Tokenize(line);
+                var parser = new Parser(tokens);
+                int result = parser.ParseExpr();
+                if (parser.Curr.Type != TokenType.End) throw new Exception();
+                Console.WriteLine(result);
+            }
+            catch { Console.WriteLine("ERROR"); }
         }
-        else if (char.IsDigit(s[pos]))
-        {
-            int start = pos;
-            while (pos < s.Length && char.IsDigit(s[pos]))
-                pos++;
-            string numberStr = s.Substring(start, pos - start);
-            if (!int.TryParse(numberStr, out int value))
-                throw new Exception("Invalid number");
-            return value;
-        }
-        else
-        {
-            throw new Exception("Unexpected character: " + s[pos]);
-        }
-    }
-
-    private static void SkipWhitespace(string s, ref int pos)
-    {
-        while (pos < s.Length && char.IsWhiteSpace(s[pos])) pos++;
     }
 }
