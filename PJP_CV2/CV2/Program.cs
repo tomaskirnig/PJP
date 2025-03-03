@@ -8,13 +8,13 @@ namespace CV2
     public enum TokenType { Num, Op, Mod, Div, LParen, RParen, Semicolon, Id }
     public class Token
     {
-        public TokenType type;
-        public string? value;
+        public TokenType Type { get; }
+        public string? Value { get; }
 
         public Token(TokenType type, string value)
         {
-            this.type = type;
-            this.value = value;
+            this.Type = type;
+            this.Value = value;
         }
     }
 
@@ -26,7 +26,7 @@ namespace CV2
             string input = Console.ReadLine();
             foreach (var token in Parse(input))
             {
-                Console.WriteLine($"{token.type}: {token.value ?? ""}");
+                Console.WriteLine($"{token.Type}: {token.Value ?? ""}");
             }
         }
 
@@ -52,13 +52,12 @@ namespace CV2
                     }
 
                     res.Add(new Token(TokenType.Num, num.ToString()));
-                    //pos--;
                 }
                 else
                 {
                     if (expr[pos] == '/')
                     {
-                        if (expr[pos + 1] == '/')
+                        if (pos + 1 < expr.Length && expr[pos + 1] == '/')
                         {
                             while (pos < expr.Length && expr[pos] != '\n')
                             {

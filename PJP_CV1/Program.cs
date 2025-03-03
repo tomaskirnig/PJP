@@ -94,7 +94,7 @@ class Program
                 if (parser.Curr.Type != TokenType.End) throw new Exception();
                 Console.WriteLine(result);
             }
-            catch { Console.WriteLine("ERROR"); }
+            catch(Exception) { Console.WriteLine("ERROR"); }
         }
     }
 }
