@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Antlr4.Runtime;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,141 +25,222 @@ namespace PLC_Lab7
             variableTypes = new Dictionary<string, DataType>();
         }
 
-        public void DeclareVariable(string name, DataType type)
+        public void DeclareVariable(string name, DataType type, IToken token = null)
         {
             if (variables.ContainsKey(name))
             {
-                throw new Exception($"Variable '{name}' is already declared.");
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Variable '{name}' is already declared.");
             }
 
             variableTypes[name] = type;
             variables[name] = type == DataType.Int ? 0 : (type == DataType.Float ? 0.0f : "");
         }
 
-        // Získání hodnoty proměnné
-        public object GetVariable(string name)
+        // Get variable value
+        public object GetVariable(string name, IToken token = null)
         {
             if (!variables.ContainsKey(name))
             {
-                throw new Exception($"Variable '{name}' is not declared.");
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Variable '{name}' is not declared.");
             }
 
             return variables[name];
         }
 
-        // Získání typu proměnné
-        public DataType GetVariableType(string name)
+        // Get variable type
+        public DataType GetVariableType(string name, IToken token = null)
         {
             if (!variableTypes.ContainsKey(name))
             {
-                throw new Exception($"Variable '{name}' is not declared.");
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Variable '{name}' is not declared.");
             }
 
             return variableTypes[name];
         }
 
-        // Přiřazení hodnoty proměnné s typovou kontrolou
-        public object AssignVariable(string name, object value)
+        // Assign value to variable with type checking
+        public object AssignVariable(string name, object value, IToken token = null)
         {
             if (!variables.ContainsKey(name))
             {
-                throw new Exception($"Variable '{name}' is not declared.");
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Variable '{name}' is not declared.");
             }
 
             DataType targetType = variableTypes[name];
-            value = ConvertValueToType(value, targetType);
-            variables[name] = value;
-            return value;
+            try
+            {
+                value = ConvertValueToType(value, targetType, token, name);
+                variables[name] = value;
+                return value;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
-        public object ConvertValueToType(object value, DataType targetType)
+        public object ConvertValueToType(object value, DataType targetType, IToken token = null, string variableName = null)
         {
+            string varInfo = !string.IsNullOrEmpty(variableName) ? $"'{variableName}' " : "";
+
             if (value == null)
-                throw new ArgumentNullException(nameof(value));
+            {
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new ArgumentNullException(nameof(value), $"{positionInfo}Value for variable {varInfo}cannot be null.");
+            }
 
             switch (targetType)
             {
                 case DataType.Int:
-                    if (value is float floatValue)
-                        return (int)floatValue;
-                    return Convert.ToInt32(value);
+                    if (value is float floatVal)
+                    {
+                        string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                        throw new Exception($"{positionInfo}Cannot assign float value {floatVal} to int variable {varInfo}.");
+                    }
+                    try
+                    {
+                        return Convert.ToInt32(value);
+                    }
+                    catch (Exception)
+                    {
+                        string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                        throw new Exception($"{positionInfo}Cannot convert value '{value}' to int for variable {varInfo}.");
+                    }
 
                 case DataType.Float:
                     if (value is int intValue)
                         return (float)intValue;
-                    return Convert.ToSingle(value);
+                    try
+                    {
+                        return Convert.ToSingle(value);
+                    }
+                    catch (Exception)
+                    {
+                        string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                        throw new Exception($"{positionInfo}Cannot convert value '{value}' to float for variable {varInfo}.");
+                    }
 
                 case DataType.String:
                     return value.ToString();
 
                 default:
-                    throw new ArgumentException($"Unsupported target type: {targetType}");
+                    string posInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                    throw new ArgumentException($"{posInfo}Unsupported target type: {targetType} for variable {varInfo}.");
             }
         }
 
-        // Aritmetické operace s typovou kontrolou
-        public object Add(object left, object right)
+        // Arithmetic operations with type checking
+        public object Add(object left, object right, IToken token = null)
         {
-            if (left is string || right is string)
+            try
             {
-                return left.ToString() + right.ToString();
-            }
+                if (left is string || right is string)
+                {
+                    return left.ToString() + right.ToString();
+                }
 
-            if (left is float || right is float)
+                if (left is float || right is float)
+                {
+                    return Convert.ToSingle(left) + Convert.ToSingle(right);
+                }
+
+                return Convert.ToInt32(left) + Convert.ToInt32(right);
+            }
+            catch
             {
-                return Convert.ToSingle(left) + Convert.ToSingle(right);
+                throw;
             }
-
-            return Convert.ToInt32(left) + Convert.ToInt32(right);
         }
 
-        public object Subtract(object left, object right)
+        public object Subtract(object left, object right, IToken token = null)
         {
-            if (left is float || right is float)
+            try
             {
-                return Convert.ToSingle(left) - Convert.ToSingle(right);
-            }
+                if (left is float || right is float)
+                {
+                    return Convert.ToSingle(left) - Convert.ToSingle(right);
+                }
 
-            return Convert.ToInt32(left) - Convert.ToInt32(right);
+                return Convert.ToInt32(left) - Convert.ToInt32(right);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
-        public object Multiply(object left, object right)
+        public object Multiply(object left, object right, IToken token = null)
         {
-            if (left is string && right is int)
+            try
             {
-                return string.Concat(Enumerable.Repeat((string)left, (int)right));
-            }
+                if (left is string && right is int)
+                {
+                    return string.Concat(Enumerable.Repeat((string)left, (int)right));
+                }
 
-            if (left is float || right is float)
+                if (left is float || right is float)
+                {
+                    return Convert.ToSingle(left) * Convert.ToSingle(right);
+                }
+
+                return Convert.ToInt32(left) * Convert.ToInt32(right);
+            }
+            catch
             {
-                return Convert.ToSingle(left) * Convert.ToSingle(right);
+                throw;
             }
-
-            return Convert.ToInt32(left) * Convert.ToInt32(right);
         }
 
-        public object Divide(object left, object right)
+        public object Divide(object left, object right, IToken token = null)
         {
             if (IsZero(right))
-                throw new DivideByZeroException("Division by zero");
-
-            if (left is float || right is float)
             {
-                return Convert.ToSingle(left) / Convert.ToSingle(right);
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new DivideByZeroException($"{positionInfo}Division by zero");
             }
 
-            return Convert.ToInt32(left) / Convert.ToInt32(right);
+            try
+            {
+                if (left is float || right is float)
+                {
+                    return Convert.ToSingle(left) / Convert.ToSingle(right);
+                }
+
+                return Convert.ToInt32(left) / Convert.ToInt32(right);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
-        public object Modulo(object left, object right)
+        // Modified version accepting IToken
+        public object Modulo(object left, object right, IToken token = null)
         {
             if (left is float || right is float)
-                throw new Exception("Modulo operator can only be used with integers");
+            {
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Modulo operator can only be used with integers, got: '{left}' % '{right}'.");
+            }
 
             if (IsZero(right))
-                throw new DivideByZeroException("Modulo by zero");
+            {
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new DivideByZeroException($"{positionInfo}Modulo by zero: '{left}' % 0");
+            }
 
-            return Convert.ToInt32(left) % Convert.ToInt32(right);
+            try
+            {
+                return Convert.ToInt32(left) % Convert.ToInt32(right);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         private bool IsZero(object value)
@@ -170,7 +252,7 @@ namespace PLC_Lab7
             return false;
         }
 
-        public DataType DetermineExpressionType(object value)
+        public DataType DetermineExpressionType(object value, IToken token = null)
         {
             if (value is int)
                 return DataType.Int;
@@ -179,7 +261,8 @@ namespace PLC_Lab7
             if (value is string)
                 return DataType.String;
 
-            throw new ArgumentException($"Unsupported value type: {value.GetType()}");
+            string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+            throw new ArgumentException($"{positionInfo}Unsupported value type: {value.GetType()}");
         }
     }
 }

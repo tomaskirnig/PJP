@@ -12,25 +12,33 @@ namespace PLC_Lab7
 
         public static void Main(string[] args)
         {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-            var fileName = "input2.txt";
-            Console.WriteLine("Parsing: " + fileName);
-            var inputFile = new StreamReader(fileName);
-            AntlrInputStream input = new AntlrInputStream(inputFile);
-            PLC_Lab7_exprLexer lexer = new PLC_Lab7_exprLexer(input);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            PLC_Lab7_exprParser parser = new PLC_Lab7_exprParser(tokens);
-
-            parser.AddErrorListener(new VerboseListener());
-
-            IParseTree tree = parser.prog();
-
-            if (parser.NumberOfSyntaxErrors == 0)
+            try
             {
-                //Console.WriteLine(tree.ToStringTree(parser));
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+                var fileName = "input2.txt";
+                Console.WriteLine("Parsing: " + fileName);
+                var inputFile = new StreamReader(fileName);
+                AntlrInputStream input = new AntlrInputStream(inputFile);
+                PLC_Lab7_exprLexer lexer = new PLC_Lab7_exprLexer(input);
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                PLC_Lab7_exprParser parser = new PLC_Lab7_exprParser(tokens);
 
-                new EvalVisitor().Visit(tree);
+                parser.AddErrorListener(new VerboseListener());
+
+                IParseTree tree = parser.prog();
+
+                if (parser.NumberOfSyntaxErrors == 0)
+                {
+                    //Console.WriteLine(tree.ToStringTree(parser));
+
+                    new EvalVisitor().Visit(tree);
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            } 
+            
         }
     }
 }

@@ -15,75 +15,111 @@ namespace PLC_Lab7
         {
             return Convert.ToInt32(context.INT().GetText(), 10);
         }
+
+        public override object VisitFloat([NotNull] PLC_Lab7_exprParser.FloatContext context)
+        {
+            return float.Parse(context.FLOAT().GetText());
+        }
+
         public override object VisitHexa([NotNull] PLC_Lab7_exprParser.HexaContext context)
         {
             return Convert.ToInt32(context.HEXA().GetText(), 16);
         }
+
         public override object VisitOct([NotNull] PLC_Lab7_exprParser.OctContext context)
         {
             return Convert.ToInt32(context.OCT().GetText(), 8);
         }
+
         public override object VisitPar([NotNull] PLC_Lab7_exprParser.ParContext context)
         {
             return Visit(context.expr());
         }
+
         public override object VisitString([NotNull] PLC_Lab7_exprParser.StringContext context)
         {
             string text = context.STRING().GetText();
             return text.Substring(1, text.Length - 2);
         }
+
         public override object VisitAdd([NotNull] PLC_Lab7_exprParser.AddContext context)
         {
             var left = Visit(context.expr()[0]);
             var right = Visit(context.expr()[1]);
             if (context.op.Text.Equals("+"))
             {
-                return typeChecker.Add(left, right);
+                return typeChecker.Add(left, right, context.op);
             }
             else
             {
-                return typeChecker.Subtract(left, right);
+                return typeChecker.Subtract(left, right, context.op);
             }
         }
+
         public override object VisitMul([NotNull] PLC_Lab7_exprParser.MulContext context)
         {
             var left = Visit(context.expr()[0]);
             var right = Visit(context.expr()[1]);
             if (context.op.Text.Equals("*"))
             {
-                return typeChecker.Multiply(left, right);
+                return typeChecker.Multiply(left, right, context.op);
             }
-            else
+            else if (context.op.Text.Equals("/"))
             {
-                return typeChecker.Divide(left, right);
+                return typeChecker.Divide(left, right, context.op);
+            }
+            else // "%"
+            {
+                return typeChecker.Modulo(left, right, context.op);
             }
         }
+
+        // In EvalVisitor.cs
 
         public override object VisitVar([NotNull] PLC_Lab7_exprParser.VarContext context)
         {
             string varName = context.ID().GetText();
-            return typeChecker.GetVariable(varName);
+            // Passing token for more accurate error messages
+            return typeChecker.GetVariable(varName, context.ID().Symbol);
         }
 
         public override object VisitAssign([NotNull] PLC_Lab7_exprParser.AssignContext context)
         {
             string varName = context.ID().GetText();
             object value = Visit(context.expr());
-            return typeChecker.AssignVariable(varName, value);
+            // Passing token for more accurate error messages
+            return typeChecker.AssignVariable(varName, value, context.ID().Symbol);
         }
 
         public override object VisitVariableDecl([NotNull] PLC_Lab7_exprParser.VariableDeclContext context)
         {
-            string varName = context.ID().GetText();
-            string typeStr = Visit(context.type()).ToString();
+            var typeNode = context.type();
+            if (typeNode == null)
+            {
+                throw new Exception("Type information is missing in the variable declaration.");
+            }
+
+            string typeStr = Visit(typeNode)?.ToString();
+            if (typeStr == null)
+            {
+                throw new Exception("Failed to determine the type of the variable.");
+            }
 
             TypeChecker.DataType dataType = TypeChecker.DataType.Int;
+
             if (typeStr == "float")
                 dataType = TypeChecker.DataType.Float;
             else if (typeStr == "string")
                 dataType = TypeChecker.DataType.String;
 
-            typeChecker.DeclareVariable(varName, dataType);
+            // Processing all variables in the declaration
+            foreach (var idNode in context.ID())
+            {
+                string varName = idNode.GetText();
+                // Passing token for more accurate error messages
+                typeChecker.DeclareVariable(varName, dataType, idNode.Symbol);
+            }
+
             return null;
         }
 
@@ -97,19 +133,21 @@ namespace PLC_Lab7
             return "float";
         }
 
+        public override object VisitStringType([NotNull] PLC_Lab7_exprParser.StringTypeContext context)
+        {
+            return "string";
+        }
+
         public override object VisitProg([NotNull] PLC_Lab7_exprParser.ProgContext context)
         {
             object lastValue = null;
             foreach (var stmt in context.stmt())
             {
                 lastValue = Visit(stmt);
-                if (lastValue != null)
+                // Print only expression results, not declarations
+                if (lastValue != null && stmt is PLC_Lab7_exprParser.ExpressionContext)
                 {
-                    // Použití instance typu místo výrazu, který může být null
-                    if (stmt is PLC_Lab7_exprParser.ExpressionContext)
-                    {
-                        Console.WriteLine(lastValue);
-                    }
+                    Console.WriteLine(lastValue);
                 }
             }
             return lastValue;
