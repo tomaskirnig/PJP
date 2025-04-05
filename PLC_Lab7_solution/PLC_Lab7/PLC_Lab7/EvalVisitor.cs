@@ -74,12 +74,9 @@ namespace PLC_Lab7
             }
         }
 
-        // In EvalVisitor.cs
-
         public override object VisitVar([NotNull] PLC_Lab7_exprParser.VarContext context)
         {
             string varName = context.ID().GetText();
-            // Passing token for more accurate error messages
             return typeChecker.GetVariable(varName, context.ID().Symbol);
         }
 
@@ -87,7 +84,6 @@ namespace PLC_Lab7
         {
             string varName = context.ID().GetText();
             object value = Visit(context.expr());
-            // Passing token for more accurate error messages
             return typeChecker.AssignVariable(varName, value, context.ID().Symbol);
         }
 
@@ -95,15 +91,11 @@ namespace PLC_Lab7
         {
             var typeNode = context.type();
             if (typeNode == null)
-            {
                 throw new Exception("Type information is missing in the variable declaration.");
-            }
 
             string typeStr = Visit(typeNode)?.ToString();
             if (typeStr == null)
-            {
                 throw new Exception("Failed to determine the type of the variable.");
-            }
 
             TypeChecker.DataType dataType = TypeChecker.DataType.Int;
 
@@ -116,7 +108,6 @@ namespace PLC_Lab7
             foreach (var idNode in context.ID())
             {
                 string varName = idNode.GetText();
-                // Passing token for more accurate error messages
                 typeChecker.DeclareVariable(varName, dataType, idNode.Symbol);
             }
 

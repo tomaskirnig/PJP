@@ -25,6 +25,7 @@ namespace PLC_Lab7
             variableTypes = new Dictionary<string, DataType>();
         }
 
+        // Declare variable
         public void DeclareVariable(string name, DataType type, IToken token = null)
         {
             if (variables.ContainsKey(name))
@@ -218,7 +219,6 @@ namespace PLC_Lab7
             }
         }
 
-        // Modified version accepting IToken
         public object Modulo(object left, object right, IToken token = null)
         {
             if (left is float || right is float)
