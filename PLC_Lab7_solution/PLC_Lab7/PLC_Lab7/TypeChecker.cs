@@ -13,7 +13,8 @@ namespace PLC_Lab7
         {
             Int,
             Float,
-            String
+            String,
+            Bool
         }
 
         private Dictionary<string, object> variables;
@@ -35,7 +36,23 @@ namespace PLC_Lab7
             }
 
             variableTypes[name] = type;
-            variables[name] = type == DataType.Int ? 0 : (type == DataType.Float ? 0.0f : "");
+
+            // Initialize the variable with a default value based on its type
+            switch (type)
+            {
+                case DataType.Int:
+                    variables[name] = 0;
+                    break;
+                case DataType.Float:
+                    variables[name] = 0.0f;
+                    break;
+                case DataType.Bool:
+                    variables[name] = false;
+                    break;
+                case DataType.String:
+                    variables[name] = "";
+                    break;
+            }
         }
 
         // Get variable value
@@ -123,6 +140,21 @@ namespace PLC_Lab7
                     {
                         string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
                         throw new Exception($"{positionInfo}Cannot convert value '{value}' to float for variable {varInfo}.");
+                    }
+
+                case DataType.Bool:
+                    if (value is bool)
+                        return value;
+                    if (value is int intVal)
+                        return intVal != 0;
+                    try
+                    {
+                        return Convert.ToBoolean(value);
+                    }
+                    catch (Exception)
+                    {
+                        string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                        throw new Exception($"{positionInfo}Cannot convert value '{value}' to boolean for variable {varInfo}.");
                     }
 
                 case DataType.String:
@@ -260,9 +292,68 @@ namespace PLC_Lab7
                 return DataType.Float;
             if (value is string)
                 return DataType.String;
+            if (value is bool)
+                return DataType.Bool;
 
             string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
             throw new ArgumentException($"{positionInfo}Unsupported value type: {value.GetType()}");
+        }
+        public object Equal(object left, object right, IToken token = null)
+        {
+            try
+            {
+                if (left is string && right is string)
+                {
+                    return (string)left == (string)right;
+                }
+                else if ((left is int || left is float) && (right is int || right is float))
+                {
+                    return Convert.ToDouble(left) == Convert.ToDouble(right);
+                }
+                else if (left is bool || right is bool)
+                {
+                    if (left is bool && right is bool)
+                        return (bool)left == (bool)right;
+                    else if (left is bool && (right is int || right is float))
+                    {
+                        // Numeric to boolean (0 = false, anything else = true)
+                        double numValue = Convert.ToDouble(right);
+                        return (bool)left == (numValue != 0);
+                    }
+                    else if ((left is int || left is float) && right is bool)
+                    {
+                        double numValue = Convert.ToDouble(left);
+                        return (numValue != 0) == (bool)right;
+                    }
+                    else
+                    {
+                        string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                        throw new Exception($"{positionInfo}Cannot compare boolean with non-numeric type: '{left}' == '{right}'");
+                    }
+                }
+                else
+                {
+                    string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                    throw new Exception($"{positionInfo}Cannot compare values of different types: '{left}' == '{right}'");
+                }
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object NotEqual(object left, object right, IToken token = null)
+        {
+            try
+            {
+                // We can reuse the Equal method and negate its result
+                return !(bool)Equal(left, right, token);
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
         }
     }
 }

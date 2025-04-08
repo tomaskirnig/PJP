@@ -103,6 +103,8 @@ namespace PLC_Lab7
                 dataType = TypeChecker.DataType.Float;
             else if (typeStr == "string")
                 dataType = TypeChecker.DataType.String;
+            else if (typeStr == "bool")
+                dataType = TypeChecker.DataType.Bool;
 
             // Processing all variables in the declaration
             foreach (var idNode in context.ID())
@@ -152,6 +154,30 @@ namespace PLC_Lab7
         public override object VisitDeclaration([NotNull] PLC_Lab7_exprParser.DeclarationContext context)
         {
             return Visit(context.decl());
+        }
+        public override object VisitEquality([NotNull] PLC_Lab7_exprParser.EqualityContext context)
+        {
+            var left = Visit(context.expr()[0]);
+            var right = Visit(context.expr()[1]);
+
+            if (context.op.Text.Equals("=="))
+            {
+                return typeChecker.Equal(left, right, context.op);
+            }
+            else // "!="
+            {
+                return typeChecker.NotEqual(left, right, context.op);
+            }
+        }
+        public override object VisitBool([NotNull] PLC_Lab7_exprParser.BoolContext context)
+        {
+            string boolText = context.BOOL().GetText();
+            return boolText.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override object VisitBoolType([NotNull] PLC_Lab7_exprParser.BoolTypeContext context)
+        {
+            return "bool";
         }
     }
 }
