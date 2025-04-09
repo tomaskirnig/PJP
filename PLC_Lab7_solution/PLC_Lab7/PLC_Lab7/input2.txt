@@ -4,6 +4,8 @@ d = "asd";
 a = b = 15;
 a + b;
 a % b;
+0x1A + 0x1A;
+023 + 023;
 bool f;
 f = (a == b);
 f == true;
@@ -13,3 +15,9 @@ c + a;
 c + 1.1;
 c - 1.1;
 c % a;
+a = 0;
+b = 15;
+do{
+	a = a + 5;
+}while(a!=b);
+a;

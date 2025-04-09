@@ -355,5 +355,101 @@ namespace PLC_Lab7
                 throw;
             }
         }
+
+        public object GreaterThan(object left, object right, IToken token = null)
+        {
+            try
+            {
+                if ((left is int || left is float) && (right is int || right is float))
+                {
+                    return Convert.ToDouble(left) > Convert.ToDouble(right);
+                }
+                else if (left is string && right is string)
+                {
+                    return string.Compare((string)left, (string)right) > 0;
+                }
+                else
+                {
+                    string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                    throw new Exception($"{positionInfo}Cannot use '>' operator with types: '{left?.GetType()}' and '{right?.GetType()}'");
+                }
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object LessThan(object left, object right, IToken token = null)
+        {
+            try
+            {
+                if ((left is int || left is float) && (right is int || right is float))
+                {
+                    return Convert.ToDouble(left) < Convert.ToDouble(right);
+                }
+                else if (left is string && right is string)
+                {
+                    return string.Compare((string)left, (string)right) < 0;
+                }
+                else
+                {
+                    string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                    throw new Exception($"{positionInfo}Cannot use '<' operator with types: '{left?.GetType()}' and '{right?.GetType()}'");
+                }
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object GreaterThanOrEqual(object left, object right, IToken token = null)
+        {
+            try
+            {
+                if ((left is int || left is float) && (right is int || right is float))
+                {
+                    return Convert.ToDouble(left) >= Convert.ToDouble(right);
+                }
+                else if (left is string && right is string)
+                {
+                    return string.Compare((string)left, (string)right) >= 0;
+                }
+                else
+                {
+                    string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                    throw new Exception($"{positionInfo}Cannot use '>=' operator with types: '{left?.GetType()}' and '{right?.GetType()}'");
+                }
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object LessThanOrEqual(object left, object right, IToken token = null)
+        {
+            try
+            {
+                if ((left is int || left is float) && (right is int || right is float))
+                {
+                    return Convert.ToDouble(left) <= Convert.ToDouble(right);
+                }
+                else if (left is string && right is string)
+                {
+                    return string.Compare((string)left, (string)right) <= 0;
+                }
+                else
+                {
+                    string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                    throw new Exception($"{positionInfo}Cannot use '<=' operator with types: '{left?.GetType()}' and '{right?.GetType()}'");
+                }
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
     }
 }

@@ -23,12 +23,24 @@ namespace PLC_Lab7
 
         public override object VisitHexa([NotNull] PLC_Lab7_exprParser.HexaContext context)
         {
-            return Convert.ToInt32(context.HEXA().GetText(), 16);
+            string hexText = context.HEXA().GetText();
+            // Remove the "0x" prefix before parsing
+            if (hexText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                hexText = hexText.Substring(2);
+            }
+            return Convert.ToInt32(hexText, 16);
         }
 
         public override object VisitOct([NotNull] PLC_Lab7_exprParser.OctContext context)
         {
-            return Convert.ToInt32(context.OCT().GetText(), 8);
+            string octText = context.OCT().GetText();
+            // Remove the leading "0" if present
+            if (octText.StartsWith("0") && octText.Length > 1)
+            {
+                octText = octText.Substring(1);
+            }
+            return Convert.ToInt32(octText, 8);
         }
 
         public override object VisitPar([NotNull] PLC_Lab7_exprParser.ParContext context)
@@ -178,6 +190,25 @@ namespace PLC_Lab7
         public override object VisitBoolType([NotNull] PLC_Lab7_exprParser.BoolTypeContext context)
         {
             return "bool";
+        }
+        public override object VisitComparison([NotNull] PLC_Lab7_exprParser.ComparisonContext context)
+        {
+            var left = Visit(context.expr()[0]);
+            var right = Visit(context.expr()[1]);
+
+            switch (context.op.Text)
+            {
+                case ">":
+                    return typeChecker.GreaterThan(left, right, context.op);
+                case "<":
+                    return typeChecker.LessThan(left, right, context.op);
+                case ">=":
+                    return typeChecker.GreaterThanOrEqual(left, right, context.op);
+                case "<=":
+                    return typeChecker.LessThanOrEqual(left, right, context.op);
+                default:
+                    throw new Exception($"Unexpected comparison operator: {context.op.Text}");
+            }
         }
     }
 }
