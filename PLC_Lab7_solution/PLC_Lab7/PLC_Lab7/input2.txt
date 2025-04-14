@@ -1,23 +1,21 @@
-﻿int a,b;
-string d;
-d = "asd"; 
-a = b = 15;
-a + b;
-a % b;
-0x1A + 0x1A;
-023 + 023;
-bool f;
-f = (a == b);
-f == true;
-float c;
-c = a + b;
-c + a;
-c + 1.1;
-c - 1.1;
-c % a;
-a = 0;
-b = 15;
-do{
-	a = a + 5;
-}while(a!=b);
-a;
+﻿// Testing unary minus
+int a;
+a = -5;
+a;               // Should be -5
+-(2 + 3);         // Should be -5
+-(-10);           // Should be 10
+-a;    
+
+// Testing string concatenation with '.'
+string s1, s2;
+s1 = "Hello";
+s2 = "World";
+s1 . s2;          // Should be "HelloWorld"
+s1 . " " . s2;    // Should be "Hello World"
+s1 . 42;          // Should be "Hello42"
+s1 . true;        // Should be "Hellotrue"
+(5 > 3) . " is true";  // Should be "True is true"
+
+// Test precedence with mixed operations
+-(5 + 3) . " is " . -8;  // Should be "-8 is -8"
+

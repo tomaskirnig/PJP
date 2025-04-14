@@ -451,5 +451,99 @@ namespace PLC_Lab7
                 throw;
             }
         }
+        // Logical operations
+        public object LogicalAnd(object left, object right, IToken token = null)
+        {
+            try
+            {
+                bool leftBool = ConvertToBool(left, token);
+                bool rightBool = ConvertToBool(right, token);
+
+                return leftBool && rightBool;
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object LogicalOr(object left, object right, IToken token = null)
+        {
+            try
+            {
+                bool leftBool = ConvertToBool(left, token);
+                bool rightBool = ConvertToBool(right, token);
+
+                return leftBool || rightBool;
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object LogicalNot(object value, IToken token = null)
+        {
+            try
+            {
+                bool boolValue = ConvertToBool(value, token);
+                return !boolValue;
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        // Helper method to convert any value to a boolean
+        private bool ConvertToBool(object value, IToken token = null)
+        {
+            if (value is bool boolValue)
+                return boolValue;
+
+            if (value is int intValue)
+                return intValue != 0;
+
+            if (value is float floatValue)
+                return floatValue != 0;
+
+            if (value is string stringValue)
+                return !string.IsNullOrEmpty(stringValue);
+
+            string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+            throw new Exception($"{positionInfo}Cannot convert value '{value}' to boolean for logical operation.");
+        }
+        public object UnaryMinus(object value, IToken token = null)
+        {
+            try
+            {
+                if (value is int intValue)
+                    return -intValue;
+
+                if (value is float floatValue)
+                    return -floatValue;
+
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Cannot apply unary minus to non-numeric type: '{value}'");
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                throw;
+            }
+        }
+
+        public object StringConcat(object left, object right, IToken token = null)
+        {
+            try
+            {
+                // Convert both operands to strings and concatenate
+                return left.ToString() + right.ToString();
+            }
+            catch (Exception ex) when (!(ex is InvalidCastException))
+            {
+                string positionInfo = token != null ? $"{token.Line}:{token.Column} - " : "";
+                throw new Exception($"{positionInfo}Error during string concatenation: {ex.Message}");
+            }
+        }
     }
 }

@@ -149,10 +149,18 @@ namespace PLC_Lab7
             foreach (var stmt in context.stmt())
             {
                 lastValue = Visit(stmt);
-                // Print only expression results, not declarations
-                if (lastValue != null && stmt is PLC_Lab7_exprParser.ExpressionContext)
+
+                // Print only standalone expressions (not assignments or declarations)
+                if (lastValue != null && stmt is PLC_Lab7_exprParser.ExpressionContext exprContext)
                 {
-                    Console.WriteLine(lastValue);
+                    var expr = exprContext.expr();
+
+                    // Check if it's a standalone expression (not an assignment)
+                    if (!(expr is PLC_Lab7_exprParser.AssignContext))
+                    {
+                        // C-like print behavior 
+                        Console.WriteLine(lastValue);
+                    }
                 }
             }
             return lastValue;
@@ -209,6 +217,74 @@ namespace PLC_Lab7
                 default:
                     throw new Exception($"Unexpected comparison operator: {context.op.Text}");
             }
+        }
+        public override object VisitLogicalAndOr([NotNull] PLC_Lab7_exprParser.LogicalAndOrContext context)
+        {
+            var left = Visit(context.expr(0));
+
+            // Short-circuit evaluation for && and ||
+            if (context.op.Text.Equals("&&"))
+            {
+                // For AND, if the left side is false, don't evaluate the right side
+                if (!IsTrue(left))
+                    return false;
+
+                var right = Visit(context.expr(1));
+                return typeChecker.LogicalAnd(left, right, context.op);
+            }
+            else // "||"
+            {
+                // For OR, if the left side is true, don't evaluate the right side
+                if (IsTrue(left))
+                    return true;
+
+                var right = Visit(context.expr(1));
+                return typeChecker.LogicalOr(left, right, context.op);
+            }
+        }
+
+        public override object VisitLogicalNot([NotNull] PLC_Lab7_exprParser.LogicalNotContext context)
+        {
+            var value = Visit(context.expr());
+            return typeChecker.LogicalNot(value);
+        }
+
+        // Helper method to determine if a value evaluates to true
+        private bool IsTrue(object value)
+        {
+            if (value is bool boolValue)
+                return boolValue;
+
+            if (value is int intValue)
+                return intValue != 0;
+
+            if (value is float floatValue)
+                return floatValue != 0;
+
+            if (value is string stringValue)
+                return !string.IsNullOrEmpty(stringValue);
+
+            return false;
+        }
+        public override object VisitUnaryMinus([NotNull] PLC_Lab7_exprParser.UnaryMinusContext context)
+        {
+            var value = Visit(context.expr());
+            return typeChecker.UnaryMinus(value);
+        }
+
+        public override object VisitStrConcat([NotNull] PLC_Lab7_exprParser.StrConcatContext context)
+        {
+            // Start with the leftmost expression
+            object result = Visit(context.expr(0));
+
+            // Concatenate with each subsequent expression
+            for (int i = 1; i < context.expr().Length; i++)
+            {
+                object nextValue = Visit(context.expr(i));
+                result = typeChecker.StringConcat(result, nextValue);
+            }
+
+            return result;
         }
     }
 }
