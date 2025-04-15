@@ -9,7 +9,6 @@ namespace PLC_Lab7
 {
     public class Program
     {
-
         public static void Main(string[] args)
         {
             try
@@ -31,14 +30,28 @@ namespace PLC_Lab7
                 {
                     //Console.WriteLine(tree.ToStringTree(parser));
 
-                    new EvalVisitor().Visit(tree);
+                    var visitor = new EvalVisitor();
+                    visitor.Visit(tree);
+
+                    // Výpis typových chyb
+                    if (visitor.TypeChecker.TypeErrors.Count > 0)
+                    {
+                        Console.WriteLine("\nType Checking Errors:");
+                        foreach (var error in visitor.TypeChecker.TypeErrors)
+                        {
+                            Console.WriteLine($"- {error}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nType checking completed successfully. No errors found.");
+                    }
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-            } 
-            
+            }
         }
     }
 }

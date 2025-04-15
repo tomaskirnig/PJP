@@ -1,21 +1,123 @@
-﻿// Testing unary minus
+﻿// ======= ZÁKLADNÍ DEKLARACE A PŘIŘAZENÍ =======
+// Správné deklarace a přiřazení
+int i1;
+i1 = 42;
+i1;
+
+float f1;
+f1 = 3.14;
+f1;
+
+bool b1;
+b1 = true;
+b1;
+
+string s1;
+s1 = "Hello, World!";
+s1;
+
+// ======= TESTOVÁNÍ POVOLENÝCH KONVERZÍ =======
+// Int -> Float (povoleno)
+float f2;
+f2 = 10;
+f2;
+
+// Int -> Bool (povoleno)
+bool b2;
+b2 = 1;
+b2;
+
+bool b3;
+b3 = 0;
+b3;
+
+// Float -> Bool (povoleno)
+bool b4;
+b4 = 3.14;
+b4;
+
+bool b5;
+b5 = 0.0;
+b5;
+
+// ======= TESTOVÁNÍ NEPOVOLENÝCH KONVERZÍ =======
+// Float -> Int (zakázáno)
+int i2;
+i2 = 3.14; // Error: Cannot convert Float to int for variable 'i2'
+
+// Bool -> Int (zakázáno)
+int i3;
+i3 = true; // Error: Cannot convert Bool to int for variable 'i3'
+
+// String -> Int (zakázáno)
+int i4;
+i4 = "42"; // Error: Cannot convert String to int for variable 'i4'
+
+// Bool -> Float (zakázáno)
+float f3;
+f3 = false; // Error: Cannot convert Bool to float for variable 'f3'
+
+// String -> Float (zakázáno)
+float f4;
+f4 = "3.14"; // Error: Cannot convert String to float for variable 'f4'
+
+// Int -> String (zakázáno)
+string s2;
+s2 = 42; // Error: Cannot convert Int to string for variable 's2'
+
+// Float -> String (zakázáno)
+string s3;
+s3 = 3.14; // Error: Cannot convert Float to string for variable 's3'
+
+// Bool -> String (zakázáno)
+string s4;
+s4 = true; // Error: Cannot convert Bool to string for variable 's4'
+
+// ======= TESTOVÁNÍ VÍCENÁSOBNÝCH DEKLARACÍ =======
+// Duplicitní deklarace
+int x;
+int x; // Error: Variable 'x' is already declared
+
+// ======= TESTOVÁNÍ NEDEFINOVANÝCH PROMĚNNÝCH =======
+// Použití nedefinované proměnné
+undefined = 10; // Error: Variable 'undefined' is not declared
+
+// ======= TESTOVÁNÍ SLOŽITĚJŠÍCH VÝRAZŮ =======
+// Aritmetické operace - správné typy
 int a;
-a = -5;
-a;               // Should be -5
--(2 + 3);         // Should be -5
--(-10);           // Should be 10
--a;    
+int b;
+a = 10;
+b = 20;
+a + b;
 
-// Testing string concatenation with '.'
-string s1, s2;
-s1 = "Hello";
-s2 = "World";
-s1 . s2;          // Should be "HelloWorld"
-s1 . " " . s2;    // Should be "Hello World"
-s1 . 42;          // Should be "Hello42"
-s1 . true;        // Should be "Hellotrue"
-(5 > 3) . " is true";  // Should be "True is true"
+float c;
+float d;
+c = 1.5;
+d = 2.5;
+c + d;
 
-// Test precedence with mixed operations
--(5 + 3) . " is " . -8;  // Should be "-8 is -8"
+// Aritmetické operace - míchání typů
+float result;
+result = (a + c); // Tady by mělo být ok (int + float -> float)
 
+int badResult;
+badResult = a - c; // Error: Cannot convert Float to int for variable 'badResult'
+
+// Logické operace
+bool test1;
+bool test2;
+test1 = true;
+test2 = false;
+test1 && test2;
+test1 || test2;
+!test1;
+
+// Porovnávání
+test1 = (a > b);
+test2 = (c <= d);
+test1 != test2;
+
+// Vnoření
+int e;
+e = (a + b) * 2;
+e;
